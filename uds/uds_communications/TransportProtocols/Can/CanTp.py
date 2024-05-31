@@ -288,7 +288,7 @@ class CanTp(iTp):
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
 
-            sleep(0.001)
+            sleep(0.01)
 
     ##
     # @brief recv method
