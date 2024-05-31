@@ -188,7 +188,7 @@ class CanTp(iTp):
         if payloadLength > CANTP_MAX_PAYLOAD_LENGTH:
             raise Exception("Payload too large for CAN Transport Protocol")
 
-        if payloadLength < self.__maxPduLength:
+        if payloadLength <= self.__maxPduLength:
             state = CanTpState.SEND_SINGLE_FRAME
         else:
             # we might need a check for functional request as we may not be able to service functional requests for
