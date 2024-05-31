@@ -208,10 +208,6 @@ class ihexFile(object):
             elif recordType == ihexRecordType.StartSegmentAddress:
                 hexFile.close()
                 raise NotImplemented("Start segment address not implemented")
-
-            elif recordType == ihexRecordType.StartLinearAddress:
-                hexFile.close()
-                raise NotImplemented("Start linear address not implemented")
         hexFile.close()
 
     @property

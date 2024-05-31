@@ -75,21 +75,28 @@ class CanTp(iTp):
             raise Exception("Do not understand the addressing config")
 
         self.__reqId = int(self.__config['canTp']['reqId'], 16)
-        self.__resId = int(self.__config['canTp']['resId'], 16)
+        self.__resId = self.__config['canTp']['resId']
 
         # sets up the relevant parameters in the instance
         if(
                 (self.__addressingType == CanTpAddressingTypes.NORMAL) |
                 (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
         ):
+            self.__minPduLength = 7
             self.__maxPduLength = 7
+            #self.__maxPduLength = 63
             self.__pduStartIndex = 0
         elif(
                 (self.__addressingType == CanTpAddressingTypes.EXTENDED) |
                 (self.__addressingType == CanTpAddressingTypes.MIXED)
         ):
-            self.__maxPduLength = 6
-            self.__pduStartIndex = 1
+            #self.__minPduLength = 6
+            #self.__maxPduLength = 6
+            #self.__maxPduLength = 62
+            #self.__pduStartIndex = 1
+            self.__minPduLength = 7
+            self.__maxPduLength = 7
+            self.__pduStartIndex = 0
 
         # set up the CAN connection
         canConnectionFactory = CanConnectionFactory()
@@ -98,8 +105,6 @@ class CanTp(iTp):
                                                  configPath, **kwargs)
 
         self.__recvBuffer = []
-
-        self.__discardNegResp = bool(self.__config['canTp']['discardNegResp'])
 
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
@@ -131,7 +136,7 @@ class CanTp(iTp):
             self.__config['canTp']['reqId'] = str(hex(kwargs['reqId']))
 
         if 'resId' in kwargs:
-            self.__config['canTp']['resId'] = str(hex(kwargs['resId']))
+            self.__config['canTp']['resId'] = str(kwargs['resId'])
 
         if 'N_SA' in kwargs:
             self.__config['canTp']['N_SA'] = str(kwargs['N_SA'])
@@ -144,9 +149,6 @@ class CanTp(iTp):
 
         if 'Mtype' in kwargs:
             self.__config['canTp']['Mtype'] = str(kwargs['Mtype'])
-
-        if 'discardNegResp' in kwargs:
-            self.__config['canTp']['discardNegResp'] = str(kwargs['discardNegResp'])
 
     ##
     # @brief connection method
@@ -202,7 +204,7 @@ class CanTp(iTp):
         currBlock = []
 
         ## this needs fixing to get the timing from the config
-        timeoutTimer = ResettableTimer(1)
+        timeoutTimer = ResettableTimer(10)
         stMinTimer = ResettableTimer()
 
         self.clearBufferedMessages()
@@ -239,11 +241,18 @@ class CanTp(iTp):
                         raise Exception("Unexpected fs response from ECU")
                 else:
                     raise Exception("Unexpected response from device")
+            else:
+                sleep(0.001)
 
             if state == CanTpState.SEND_SINGLE_FRAME:
-                txPdu[N_PCI_INDEX] += (CanTpMessageType.SINGLE_FRAME << 4)
-                txPdu[SINGLE_FRAME_DL_INDEX] += payloadLength
-                txPdu[SINGLE_FRAME_DATA_START_INDEX:] = fillArray(payload, self.__maxPduLength)
+                if len(payload) <= self.__minPduLength:
+                    txPdu[N_PCI_INDEX] += (CanTpMessageType.SINGLE_FRAME << 4)
+                    txPdu[SINGLE_FRAME_DL_INDEX] += payloadLength
+                    txPdu[SINGLE_FRAME_DATA_START_INDEX:] = fillArray(payload, self.__minPduLength)
+                else:
+                    txPdu[N_PCI_INDEX] = 0
+                    txPdu[FIRST_FRAME_DL_INDEX_LOW] = payloadLength
+                    txPdu[FIRST_FRAME_DATA_START_INDEX:] = payload
                 self.transmit(txPdu, functionalReq)
                 endOfMessage_flag = True
             elif state == CanTpState.SEND_FIRST_FRAME:
@@ -307,7 +316,11 @@ class CanTp(iTp):
             rxPdu = self.getNextBufferedMessage()
 
             if rxPdu is not None:
-                N_PCI = (rxPdu[N_PCI_INDEX] & 0xF0) >> 4
+                if rxPdu[N_PCI_INDEX] == 0x00:
+                    rxPdu = rxPdu[1:]
+                    N_PCI = 0
+                else:
+                    N_PCI = (rxPdu[N_PCI_INDEX] & 0xF0) >> 4
                 if state == CanTpState.IDLE:
                     if N_PCI == CanTpMessageType.SINGLE_FRAME:
                         payloadLength = rxPdu[N_PCI_INDEX & 0x0F]
@@ -330,6 +343,8 @@ class CanTp(iTp):
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
+            else:
+                sleep(0.01)
 
             if state == CanTpState.SEND_FLOW_CONTROL:
                 txPdu[N_PCI_INDEX] = 0x30
@@ -373,12 +388,14 @@ class CanTp(iTp):
     # @brief the listener callback used when a message is received
     def callback_onReceive(self, msg):
         if self.__addressingType == CanTpAddressingTypes.NORMAL:
-            if msg.arbitration_id == self.__resId:
-                self.__recvBuffer.append(msg.data[self.__pduStartIndex:])
+            self.__recvBuffer.append(msg.data[self.__pduStartIndex:])
         elif self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED:
             raise Exception("I do not know how to receive this addressing type yet")
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
             raise Exception("I do not know how to receive this addressing type yet")
+        elif self.__addressingType == CanTpAddressingTypes.EXTENDED:
+            if msg.arbitration_id == self.__resId:
+                self.__recvBuffer.append(msg.data[self.__pduStartIndex:])            
         else:
             raise Exception("I do not know how to receive this addressing type")
 
@@ -452,15 +469,21 @@ class CanTp(iTp):
 
         transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-        if (
-            (self.__addressingType == CanTpAddressingTypes.NORMAL) |
-            (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
-        ):
+        if self.__addressingType == CanTpAddressingTypes.NORMAL or \
+                self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED:
             transmitData = data
+            self.__connection.transmit(transmitData, self.__reqId)
+        elif self.__addressingType == CanTpAddressingTypes.MIXED:
+            transmitData[0] = self.__N_AE
+            transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId)
+        elif self.__addressingType == CanTpAddressingTypes.EXTENDED:
+            transmitData = data
+            #transmitData[0] = self.__N_AE
+            #transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId, extended=True)
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
             transmitData[0] = self.__N_AE
             transmitData[1:] = data
         else:
             raise Exception("I do not know how to send this addressing type")
-
-        self.__connection.transmit(transmitData, self.__reqId, )
