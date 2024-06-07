@@ -241,8 +241,6 @@ class CanTp(iTp):
                         raise Exception("Unexpected fs response from ECU")
                 else:
                     raise Exception("Unexpected response from device")
-            else:
-                sleep(0.001)
 
             if state == CanTpState.SEND_SINGLE_FRAME:
                 if len(payload) <= self.__minPduLength:
@@ -288,7 +286,7 @@ class CanTp(iTp):
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
 
-            sleep(0.01)
+            sleep(0.0055)
 
     ##
     # @brief recv method
@@ -343,8 +341,6 @@ class CanTp(iTp):
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
-            else:
-                sleep(0.01)
 
             if state == CanTpState.SEND_FLOW_CONTROL:
                 txPdu[N_PCI_INDEX] = 0x30
