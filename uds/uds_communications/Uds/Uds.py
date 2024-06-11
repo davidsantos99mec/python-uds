@@ -27,17 +27,23 @@ class Uds(object):
     # @param [in] resId The response Id used by the UDS connection, defaults to None if not used
     def __init__(self, configPath=None, ihexFile=None, **kwargs):
 
-        self.__config = None
-        self.__transportProtocol = None
-        self.__P2_CAN_Client = None
-        self.__P2_CAN_Server = None
+        #self.__config = None
+        #self.__transportProtocol = None
+        self.__transportProtocol = "CAN"
+        #self.__P2_CAN_Client = None
+        self.__P2_CAN_Client = 1.0
+        #self.__P2_CAN_Server = None
+        self.__P2_CAN_Server = 1.0
 
-        self.__loadConfiguration(configPath)
+        #self.__loadConfiguration(configPath)
         self.__checkKwargs(**kwargs)
 
-        self.__transportProtocol = self.__config['uds']['transportProtocol']
-        self.__P2_CAN_Client = float(self.__config['uds']['P2_CAN_Client'])
-        self.__P2_CAN_Server = float(self.__config['uds']['P2_CAN_Server'])
+        #self.__transportProtocol = self.__config['uds']['transportProtocol']
+        self.__transportProtocol = self.__transportProtocol
+        #self.__P2_CAN_Client = float(self.__config['uds']['P2_CAN_Client'])
+        self.__P2_CAN_Client = float(self.__P2_CAN_Client)
+        #self.__P2_CAN_Server = float(self.__config['uds']['P2_CAN_Server'])
+        self.__P2_CAN_Server = float(self.__P2_CAN_Server)
 
         tpFactory = TpFactory()
         self.tp = tpFactory(self.__transportProtocol, configPath=configPath, **kwargs)
@@ -53,32 +59,36 @@ class Uds(object):
 
 
 
-    def __loadConfiguration(self, configPath=None):
+    #def __loadConfiguration(self, configPath=None):
 
-        baseConfig = path.dirname(__file__) + "/config.ini"
-        self.__config = Config()
-        if path.exists(baseConfig):
-            self.__config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
+    #    baseConfig = path.dirname(__file__) + "/config.ini"
+    #    self.__config = Config()
+    #    if path.exists(baseConfig):
+    #        self.__config.read(baseConfig)
+    #    else:
+    #        raise FileNotFoundError("No base config file")
 
-        # check the config path
-        if configPath is not None:
-            if path.exists(configPath):
-                self.__config.read(configPath)
-            else:
-                raise FileNotFoundError("specified config not found")
+    #    # check the config path
+    #    if configPath is not None:
+    #        if path.exists(configPath):
+    #            self.__config.read(configPath)
+    #        else:
+    #            raise FileNotFoundError("specified config not found")
 
     def __checkKwargs(self, **kwargs):
 
         if 'transportProtocol' in kwargs:
-            self.__config['uds']['transportProtocol'] = kwargs['transportProtocol']
+            #self.__config['uds']['transportProtocol'] = kwargs['transportProtocol']
+            self.__transportProtocol = kwargs['transportProtocol']
 
         if 'P2_CAN_Server' in kwargs:
-            self.__config['uds']['P2_CAN_Server'] = str(kwargs['P2_CAN_Server'])
+            #self.__config['uds']['P2_CAN_Server'] = str(kwargs['P2_CAN_Server'])
+            self.__P2_CAN_Server = str(kwargs['P2_CAN_Server'])
 
         if 'P2_CAN_Client' in kwargs:
-            self.__config['uds']['P2_CAN_Client'] = str(kwargs['P2_CAN_Client'])
+            #self.__config['uds']['P2_CAN_Client'] = str(kwargs['P2_CAN_Client'])
+            self.__P2_CAN_Client = str(kwargs['P2_CAN_Client'])
+
 
 
     @property

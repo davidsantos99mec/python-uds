@@ -48,25 +48,25 @@ class TpFactory(object):
         else:
             raise Exception("Unknown transport type selected")
 
-    @staticmethod
-    def loadConfiguration(configPath=None):
+    #@staticmethod
+    #def loadConfiguration(configPath=None):
 
         #load the base config
-        baseConfig = path.dirname(__file__) + "/config.ini"
-        config = Config()
-        if path.exists(baseConfig):
-            config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
+    #    baseConfig = path.dirname(__file__) + "/config.ini"
+    #    config = Config()
+    #    if path.exists(baseConfig):
+    #        config.read(baseConfig)
+    #    else:
+    #        raise FileNotFoundError("No base config file")
 
-        # check the config path
-        if configPath is not None:
-            if path.exists(configPath):
-                config.read(configPath)
-            else:
-                raise FileNotFoundError("specified config not found")
+    #    # check the config path
+    #    if configPath is not None:
+    #        if path.exists(configPath):
+    #            config.read(configPath)
+    #        else:
+    #            raise FileNotFoundError("specified config not found")
 
-        TpFactory.config = config
+    #    TpFactory.config = config
 
 
 if __name__ == "__main__":
