@@ -1,5 +1,5 @@
 import can
-from can.interfaces import pcan, vector
+from can.interfaces import pcan
 from uds.uds_configuration.Config import Config
 from os import path
 #from uds import CanConnection
@@ -18,11 +18,14 @@ class CanConnectionFactory(object):
     @staticmethod
     def __call__(callback=None, filter=None, configPath=None, **kwargs):
 
-        CanConnectionFactory.loadConfiguration(configPath)
-        CanConnectionFactory.checkKwargs(**kwargs)
+        #CanConnectionFactory.loadConfiguration(configPath)
+        #CanConnectionFactory.checkKwargs(**kwargs)
+        connectionType =  kwargs['interface']
+        baudrate = kwargs['baudrate']
+        channel = kwargs['channel']
 
         # check config file and load
-        connectionType = CanConnectionFactory.config['can']['interface']
+        #connectionType = CanConnectionFactory.config['can']['interface']
 
         #if connectionType == 'virtual':
         #    connectionName = CanConnectionFactory.config['virtual']['interfaceName']
@@ -101,20 +104,20 @@ class CanConnectionFactory(object):
                 CanConnectionFactory.connections[connectionName].addFilter(filter)
             return CanConnectionFactory.connections[connectionName]
 
-        elif connectionType == 'peak_250':
-            channel = CanConnectionFactory.config['peak']['device']
+        elif connectionType == 'pcan_250':
+        #    channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
         #        baudrate = CanConnectionFactory.config['can']['baudrate']
                 CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
-                                                                          pcan.PcanBus(channel='PCAN_USBBUS1',
-                                                                          bitrate=250000))
+                                                                          pcan.PcanBus(channel,
+                                                                          bitrate=int(baudrate)))
             else:
                 CanConnectionFactory.connections[channel].addCallback(callback)
                 CanConnectionFactory.connections[channel].addFilter(filter)
                 
             return CanConnectionFactory.connections[channel]
-        elif connectionType == 'peak_500':
-            channel = CanConnectionFactory.config['peak']['device']
+        elif connectionType == 'pcan_500':
+        #    channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
         #        baudrate = CanConnectionFactory.config['can']['baudrate']
                 CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
@@ -125,8 +128,8 @@ class CanConnectionFactory(object):
                 CanConnectionFactory.connections[channel].addFilter(filter)
                 
             return CanConnectionFactory.connections[channel]
-        elif connectionType == 'peak_1000':
-            channel = CanConnectionFactory.config['peak']['device']
+        elif connectionType == 'pcan_1000':
+        #    channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
         #        baudrate = CanConnectionFactory.config['can']['baudrate']
                 CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
@@ -138,18 +141,29 @@ class CanConnectionFactory(object):
                 
             return CanConnectionFactory.connections[channel]
         
-        #elif connectionType == 'peak':
-        #    channel = CanConnectionFactory.config['peak']['device']
+        elif connectionType == 'pcan':
+            #channel = CanConnectionFactory.config['peak']['device']
+            if channel not in CanConnectionFactory.connections:
+            #    baudrate = CanConnectionFactory.config['can']['baudrate']
+                CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                          pcan.PcanBus(channel,
+                                                                          bitrate=int(baudrate)))
+            else:
+                CanConnectionFactory.connections[channel].addCallback(callback)
+                CanConnectionFactory.connections[channel].addFilter(filter)
+                
+            return CanConnectionFactory.connections[channel]
+        
+        #elif connectionType == 'pcan':
+        #    #channel = CanConnectionFactory.config['peak']['device']
         #    if channel not in CanConnectionFactory.connections:
-        #        baudrate = CanConnectionFactory.config['can']['baudrate']
+        #    #    baudrate = CanConnectionFactory.config['can']['baudrate']
         #        CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
-        #                                                                  pcan.PcanBus(channel,
-        #                                                                  bitrate=baudrate))
+        #                                                                  can.ThreadSafeBus(connectionType,channel,
+        #                                                                  bitrate=int(baudrate)))
         #    else:
         #        CanConnectionFactory.connections[channel].addCallback(callback)
         #        CanConnectionFactory.connections[channel].addFilter(filter)
-                
-        #    return CanConnectionFactory.connections[channel]
 
         #elif connectionType == 'vector':
         #    channel = int(CanConnectionFactory.config['vector']['channel'])

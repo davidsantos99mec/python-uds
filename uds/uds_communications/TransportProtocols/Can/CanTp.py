@@ -10,7 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 import can
-from can.interfaces import pcan, vector
+#from can.interfaces import pcan, vector
 from time import sleep
 
 from uds import iTp
@@ -363,6 +363,7 @@ class CanTp(iTp):
     def closeConnection(self):
         # deregister filters, listeners and notifiers etc
         # close can connection
+        self.__connection.close()
         pass
 
     ##

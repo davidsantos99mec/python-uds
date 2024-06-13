@@ -61,6 +61,6 @@ class CanConnection(object):
 
     def close(self):
         self.__notifier.stop()
-        [listener.stop() for listener in self.__listeners]
+        #[listener.stop() for listener in self.__listeners]
         self.__bus.shutdown()
 
