@@ -44,17 +44,24 @@ class CanTp(iTp):
     def __init__(self, configPath=None, **kwargs):
 
         # perform the instance config
-        self.__config = None
+        #self.__config = None
+        self.__N_AE=0xFF
+        self.__N_TA=0xFF
+        self.__N_SA=0xFF
+        Mtype="DIAGNOSTICS"
+        self.__Mtype=CanTpMTypes.DIAGNOSTICS
+        addressingType="NORMAL"
+        self.__addressingType = CanTpAddressingTypes.NORMAL
 
-        self.__loadConfiguration(configPath)
+        #self.__loadConfiguration(configPath)
         self.__checkKwargs(**kwargs)
 
         # load variables from the config
-        self.__N_AE = int(self.__config['canTp']['N_AE'], 16)
-        self.__N_TA = int(self.__config['canTp']['N_TA'], 16)
-        self.__N_SA = int(self.__config['canTp']['N_SA'], 16)
+        #self.__N_AE = int(self.__config['canTp']['N_AE'], 16)
+        #self.__N_TA = int(self.__config['canTp']['N_TA'], 16)
+        #self.__N_SA = int(self.__config['canTp']['N_SA'], 16)
 
-        Mtype = self.__config['canTp']['Mtype']
+        #Mtype = self.__config['canTp']['Mtype']
         if (Mtype == "DIAGNOSTICS"):
             self.__Mtype = CanTpMTypes.DIAGNOSTICS
         elif (Mtype == "REMOTE_DIAGNOSTICS"):
@@ -62,7 +69,7 @@ class CanTp(iTp):
         else:
             raise Exception("Do not understand the Mtype config")
 
-        addressingType = self.__config['canTp']['addressingType']
+        #addressingType = self.__config['canTp']['addressingType']
         if addressingType == "NORMAL":
             self.__addressingType = CanTpAddressingTypes.NORMAL
         elif addressingType == "NORMAL_FIXED":
@@ -74,8 +81,8 @@ class CanTp(iTp):
         else:
             raise Exception("Do not understand the addressing config")
 
-        self.__reqId = int(self.__config['canTp']['reqId'], 16)
-        self.__resId = self.__config['canTp']['resId']
+        #self.__reqId = int(self.__config['canTp']['reqId'], 16)
+        #self.__resId = self.__config['canTp']['resId']
 
         # sets up the relevant parameters in the instance
         if(
@@ -130,25 +137,32 @@ class CanTp(iTp):
     def __checkKwargs(self, **kwargs):
 
         if 'addressingType' in kwargs:
-            self.__config['canTp']['addressingType'] = kwargs['addressingType']
+            #self.__config['canTp']['addressingType'] = kwargs['addressingType']
+            addressingType = kwargs['addressingType']
 
         if 'reqId' in kwargs:
-            self.__config['canTp']['reqId'] = str(hex(kwargs['reqId']))
+            #self.__config['canTp']['reqId'] = str(hex(kwargs['reqId']))
+            self.__reqId = int(hex(kwargs['reqId']),16)
 
         if 'resId' in kwargs:
-            self.__config['canTp']['resId'] = str(kwargs['resId'])
+            #self.__config['canTp']['resId'] = str(kwargs['resId'])
+            self.__resId= str(kwargs['resId'])
 
         if 'N_SA' in kwargs:
-            self.__config['canTp']['N_SA'] = str(kwargs['N_SA'])
+            #self.__config['canTp']['N_SA'] = str(kwargs['N_SA'])
+            self.__N_SA = int(kwargs['N_SA'],16)
 
         if 'N_TA' in kwargs:
-            self.__config['canTp']['N_TA'] = str(kwargs['N_TA'])
+            #self.__config['canTp']['N_TA'] = str(kwargs['N_TA'])
+            self.__N_TA = int(kwargs['N_TA'],16)
 
         if 'N_AE' in kwargs:
-            self.__config['canTp']['N_AE'] = str(kwargs['N_AE'])
+            #self.__config['canTp']['N_AE'] = str(kwargs['N_AE'])
+            self.__N_AE = int(kwargs['N_AE'],16)
 
         if 'Mtype' in kwargs:
-            self.__config['canTp']['Mtype'] = str(kwargs['Mtype'])
+            #self.__config['canTp']['Mtype'] = str(kwargs['Mtype'])
+            Mtype = str(kwargs['Mtype'])
 
     ##
     # @brief connection method
